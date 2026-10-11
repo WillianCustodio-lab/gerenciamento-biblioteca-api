@@ -1,0 +1,33 @@
+{
+  "name": "gerenciamento-biblioteca-api",
+  "version": "1.0.0",
+  "description": "API para gerenciamento de biblioteca.",
+  "main": "src/server.js",
+  "type": "module",
+ "scripts": {
+ "migrate": "node --env-file=.env ./node_modules/node-pg-migrate/bin/node-pg-migrate.js"
+},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WillianCustodio-lab/gerenciamento-biblioteca-api.git"
+  },
+  "keywords": [
+    "nodejs",
+    "api",
+    "postgresql",
+    "biblioteca"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/WillianCustodio-lab/gerenciamento-biblioteca-api/issues"
+  },
+  "homepage": "https://github.com/WillianCustodio-lab/gerenciamento-biblioteca-api#readme",
+  "dependencies": {
+    "dotenv": "^18.0.7",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "node-pg-migrate": "^9.0.0"
+  }
+}
