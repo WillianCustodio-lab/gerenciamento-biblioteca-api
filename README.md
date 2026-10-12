@@ -27,6 +27,7 @@ O sistema tem como objetivo organizar o cadastro de usuários e livros, além de
 - [Modelagem inicial](#modelagem-inicial)
 - [Relacionamentos](#relacionamentos)
 - [DER inicial](#der-inicial)
+- [Tecnologias](#tecnologias)
 
 ## Modelagem inicial
 
@@ -107,7 +108,7 @@ erDiagram
         int id PK
         string title
         string author
-        string isbn UK
+        string isbn
         string status
         datetime created_at
     }
@@ -122,3 +123,13 @@ erDiagram
         string status
     }
 ```
+
+## Tecnologias
+
+| Tecnologia | Papel no projeto |
+| --- | --- |
+| **Node.js** | Executa o código da aplicação no servidor |
+| **Express** | Organiza o servidor HTTP e as rotas da API |
+| **PostgreSQL** | Armazena usuários, livros e empréstimos |
+| **node-pg-migrate** | Cria e atualiza a estrutura do banco por meio de migrations |
+| **Docker Compose** | Inicializa a aplicação e o banco em ambientes integrados |
