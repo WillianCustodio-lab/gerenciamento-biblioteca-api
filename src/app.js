@@ -18,7 +18,7 @@ app.get("/health", async (request, response) => {
       database: "connected",
       databaseTime: result.rows[0].database_time,
     });
-  } catch (error) {
+  } catch {
     return response.status(503).json({
       status: "error",
       database: "disconnected",
