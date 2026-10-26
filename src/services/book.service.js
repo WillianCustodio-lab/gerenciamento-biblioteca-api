@@ -103,3 +103,24 @@ export async function findBookById(id) {
 
   return result.rows[0];
 }
+
+export async function updateBook(id, data) {
+  const bookId = normalizeBookId(id);
+  const { title, author, isbn } = normalizeBookData(data);
+
+  const result = await pool.query(
+    `UPDATE books
+     SET title = $1,
+         author = $2,
+         isbn = $3
+     WHERE id = $4
+     RETURNING id, title, author, isbn, status, created_at`,
+    [title, author, isbn, bookId],
+  );
+
+  if (!result.rows[0]) {
+    throw createError("Livro não encontrado.", 404);
+  }
+
+  return result.rows[0];
+}
