@@ -1,5 +1,6 @@
 import {
   createBook,
+  deleteBook,
   findAllBooks,
   findBookById,
   updateBook,
@@ -52,5 +53,18 @@ export async function editBook(request, response) {
     });
   } catch (error) {
     return sendError(response, error, "Erro interno ao atualizar livro.");
+  }
+}
+
+export async function removeBook(request, response) {
+  try {
+    const book = await deleteBook(request.params.id);
+
+    return response.status(200).json({
+      message: "Livro excluído com sucesso.",
+      book,
+    });
+  } catch (error) {
+    return sendError(response, error, "Erro interno ao excluir livro.");
   }
 }

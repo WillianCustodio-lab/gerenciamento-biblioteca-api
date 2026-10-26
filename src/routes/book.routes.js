@@ -3,6 +3,7 @@ import {
   editBook,
   listBooks,
   registerBook,
+  removeBook,
   showBook,
 } from "../controllers/book.controller.js";
 import { authenticate } from "../middlewares/authentication.middleware.js";
@@ -15,5 +16,6 @@ bookRoutes.get("/", listBooks);
 bookRoutes.get("/:id", showBook);
 bookRoutes.post("/", authorize("admin"), registerBook);
 bookRoutes.put("/:id", authorize("admin"), editBook);
+bookRoutes.delete("/:id", authorize("admin"), removeBook);
 
 export { bookRoutes };

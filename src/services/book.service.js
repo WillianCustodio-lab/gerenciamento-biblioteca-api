@@ -124,3 +124,36 @@ export async function updateBook(id, data) {
 
   return result.rows[0];
 }
+
+export async function deleteBook(id) {
+  const bookId = normalizeBookId(id);
+
+  const bookResult = await pool.query(
+    `SELECT id, title, author, isbn, status, created_at
+     FROM books
+     WHERE id = $1`,
+    [bookId],
+  );
+
+  if (!bookResult.rows[0]) {
+    throw createError("Livro não encontrado.", 404);
+  }
+
+  const loanResult = await pool.query(
+    `SELECT id
+     FROM loans
+     WHERE book_id = $1
+     LIMIT 1`,
+    [bookId],
+  );
+
+  if (loanResult.rows[0]) {
+    throw createError(
+      "Não é possível excluir um livro que possui histórico de empréstimos.",
+      409,
+    );
+  }
+
+  await pool.query("DELETE FROM books WHERE id = $1", [bookId]);
+  return bookResult.rows[0];
+}
