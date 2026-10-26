@@ -1,4 +1,7 @@
-import { createBook } from "../services/book.service.js";
+import {
+  createBook,
+  findAllBooks,
+} from "../services/book.service.js";
 
 function sendError(response, error, fallbackMessage) {
   return response.status(error.statusCode || 500).json({
@@ -16,5 +19,14 @@ export async function registerBook(request, response) {
     });
   } catch (error) {
     return sendError(response, error, "Erro interno ao cadastrar livro.");
+  }
+}
+
+export async function listBooks(request, response) {
+  try {
+    const books = await findAllBooks(request.query);
+    return response.status(200).json({ books });
+  } catch (error) {
+    return sendError(response, error, "Erro interno ao consultar livros.");
   }
 }

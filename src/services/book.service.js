@@ -52,3 +52,27 @@ export async function createBook(data) {
 
   return result.rows[0];
 }
+
+export async function findAllBooks({ status } = {}) {
+  const allowedStatuses = ["available", "loaned"];
+
+  if (status !== undefined && !allowedStatuses.includes(status)) {
+    throw createError("Status de livro inválido.", 400);
+  }
+
+  const values = [];
+  let query = `
+    SELECT id, title, author, isbn, status, created_at
+    FROM books
+  `;
+
+  if (status) {
+    query += " WHERE status = $1";
+    values.push(status);
+  }
+
+  query += " ORDER BY id";
+
+  const result = await pool.query(query, values);
+  return result.rows;
+}
