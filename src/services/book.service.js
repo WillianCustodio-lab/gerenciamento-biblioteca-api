@@ -40,6 +40,16 @@ function normalizeBookData({ title, author, isbn } = {}) {
   };
 }
 
+function normalizeBookId(id) {
+  const normalizedId = Number(id);
+
+  if (!Number.isInteger(normalizedId) || normalizedId <= 0) {
+    throw createError("Identificador de livro inválido.", 400);
+  }
+
+  return normalizedId;
+}
+
 export async function createBook(data) {
   const { title, author, isbn } = normalizeBookData(data);
 
@@ -75,4 +85,21 @@ export async function findAllBooks({ status } = {}) {
 
   const result = await pool.query(query, values);
   return result.rows;
+}
+
+export async function findBookById(id) {
+  const bookId = normalizeBookId(id);
+
+  const result = await pool.query(
+    `SELECT id, title, author, isbn, status, created_at
+     FROM books
+     WHERE id = $1`,
+    [bookId],
+  );
+
+  if (!result.rows[0]) {
+    throw createError("Livro não encontrado.", 404);
+  }
+
+  return result.rows[0];
 }

@@ -1,6 +1,7 @@
 import {
   createBook,
   findAllBooks,
+  findBookById,
 } from "../services/book.service.js";
 
 function sendError(response, error, fallbackMessage) {
@@ -28,5 +29,14 @@ export async function listBooks(request, response) {
     return response.status(200).json({ books });
   } catch (error) {
     return sendError(response, error, "Erro interno ao consultar livros.");
+  }
+}
+
+export async function showBook(request, response) {
+  try {
+    const book = await findBookById(request.params.id);
+    return response.status(200).json({ book });
+  } catch (error) {
+    return sendError(response, error, "Erro interno ao consultar livro.");
   }
 }
