@@ -97,3 +97,84 @@ export async function createLoan({ user_id, book_id, due_date } = {}) {
     client.release();
   }
 }
+
+export async function findAllLoans({ status } = {}, requester) {
+  const allowedStatuses = ["active", "returned"];
+
+  if (status !== undefined && !allowedStatuses.includes(status)) {
+    throw createError("Status de empréstimo inválido.", 400);
+  }
+
+  const conditions = [];
+  const values = [];
+
+  if (requester.role !== "admin") {
+    values.push(requester.id);
+    conditions.push(`l.user_id = $${values.length}`);
+  }
+
+  if (status) {
+    values.push(status);
+    conditions.push(`l.status = $${values.length}`);
+  }
+
+  let query = `
+    SELECT l.id,
+           l.user_id,
+           u.name AS user_name,
+           l.book_id,
+           b.title AS book_title,
+           b.isbn AS book_isbn,
+           l.loan_date,
+           l.due_date,
+           l.returned_at,
+           l.status
+    FROM loans l
+    JOIN users u ON u.id = l.user_id
+    JOIN books b ON b.id = l.book_id
+  `;
+
+  if (conditions.length > 0) {
+    query += ` WHERE ${conditions.join(" AND ")}`;
+  }
+
+  query += " ORDER BY l.id";
+
+  const result = await pool.query(query, values);
+  return result.rows;
+}
+
+export async function findLoanById(id, requester) {
+  const loanId = normalizeId(id, "empréstimo");
+  const values = [loanId];
+  let ownershipCondition = "";
+
+  if (requester.role !== "admin") {
+    values.push(requester.id);
+    ownershipCondition = ` AND l.user_id = $${values.length}`;
+  }
+
+  const result = await pool.query(
+    `SELECT l.id,
+            l.user_id,
+            u.name AS user_name,
+            l.book_id,
+            b.title AS book_title,
+            b.isbn AS book_isbn,
+            l.loan_date,
+            l.due_date,
+            l.returned_at,
+            l.status
+     FROM loans l
+     JOIN users u ON u.id = l.user_id
+     JOIN books b ON b.id = l.book_id
+     WHERE l.id = $1${ownershipCondition}`,
+    values,
+  );
+
+  if (!result.rows[0]) {
+    throw createError("Empréstimo não encontrado.", 404);
+  }
+
+  return result.rows[0];
+}
