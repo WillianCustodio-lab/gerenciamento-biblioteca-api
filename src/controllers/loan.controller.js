@@ -2,6 +2,7 @@ import {
   createLoan,
   findAllLoans,
   findLoanById,
+  returnLoan,
 } from "../services/loan.service.js";
 
 function sendError(response, error, fallbackMessage) {
@@ -38,5 +39,18 @@ export async function showLoan(request, response) {
     return response.status(200).json({ loan });
   } catch (error) {
     return sendError(response, error, "Erro interno ao consultar empréstimo.");
+  }
+}
+
+export async function returnRegisteredLoan(request, response) {
+  try {
+    const loan = await returnLoan(request.params.id);
+
+    return response.status(200).json({
+      message: "Devolução registrada com sucesso.",
+      loan,
+    });
+  } catch (error) {
+    return sendError(response, error, "Erro interno ao registrar devolução.");
   }
 }

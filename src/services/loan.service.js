@@ -178,3 +178,50 @@ export async function findLoanById(id, requester) {
 
   return result.rows[0];
 }
+
+export async function returnLoan(id) {
+  const loanId = normalizeId(id, "empréstimo");
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const currentLoanResult = await client.query(
+      `SELECT id, book_id, status
+       FROM loans
+       WHERE id = $1
+       FOR UPDATE`,
+      [loanId],
+    );
+
+    if (!currentLoanResult.rows[0]) {
+      throw createError("Empréstimo não encontrado.", 404);
+    }
+
+    if (currentLoanResult.rows[0].status !== "active") {
+      throw createError("Este empréstimo já foi devolvido.", 409);
+    }
+
+    const loanResult = await client.query(
+      `UPDATE loans
+       SET status = 'returned',
+           returned_at = CURRENT_DATE
+       WHERE id = $1
+       RETURNING id, user_id, book_id, loan_date, due_date, returned_at, status`,
+      [loanId],
+    );
+
+    await client.query(
+      "UPDATE books SET status = 'available' WHERE id = $1",
+      [currentLoanResult.rows[0].book_id],
+    );
+
+    await client.query("COMMIT");
+    return loanResult.rows[0];
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
