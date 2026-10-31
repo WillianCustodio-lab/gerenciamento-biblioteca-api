@@ -1,15 +1,31 @@
+import { findBookByIsbn } from "../infrastructure/integrations/open-library.client.js";
+
 import {
   createBook,
   deleteBook,
   findAllBooks,
   findBookById,
   updateBook,
+  importBook,
 } from "../services/book.service.js";
 
 function sendError(response, error, fallbackMessage) {
   return response.status(error.statusCode || 500).json({
     message: error.statusCode ? error.message : fallbackMessage,
   });
+}
+
+export async function registerImportedBook(request, response) {
+  try {
+    const book = await importBook(request.body, findBookByIsbn);
+
+    return response.status(201).json({
+      message: "Livro importado e cadastrado com sucesso.",
+      book,
+    });
+  } catch (error) {
+    return sendError(response, error, "Erro interno ao importar livro.");
+  }
 }
 
 export async function registerBook(request, response) {
