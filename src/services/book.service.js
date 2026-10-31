@@ -6,6 +6,20 @@ function createError(message, statusCode) {
   return error;
 }
 
+function normalizeIsbn(isbn) {
+  if (typeof isbn !== "string") {
+    throw createError("ISBN é obrigatório e deve ser um texto.", 400);
+  }
+
+  const normalizedIsbn = isbn.replace(/[\s-]/g, "").toUpperCase();
+
+  if (!/^(?:\d{13}|\d{9}[\dX])$/.test(normalizedIsbn)) {
+    throw createError("O ISBN deve possuir 10 ou 13 caracteres válidos.", 400);
+  }
+
+  return normalizedIsbn;
+}
+
 function normalizeBookData({ title, author, isbn } = {}) {
   if (
     typeof title !== "string" ||
@@ -20,15 +34,11 @@ function normalizeBookData({ title, author, isbn } = {}) {
 
   const normalizedTitle = title.trim();
   const normalizedAuthor = author.trim();
-  const normalizedIsbn = isbn.replace(/[\s-]/g, "").toUpperCase();
+  const normalizedIsbn = normalizeIsbn(isbn);
 
-  const isbnIsValid =
-    /^\d{13}$/.test(normalizedIsbn) ||
-    /^\d{9}[\dX]$/.test(normalizedIsbn);
-
-  if (!isbnIsValid) {
+  if (normalizedTitle.length > 255 || normalizedAuthor.length > 160) {
     throw createError(
-      "O ISBN deve possuir 10 ou 13 caracteres válidos.",
+      "O título deve ter até 255 caracteres e o autor até 160.",
       400,
     );
   }
@@ -156,4 +166,15 @@ export async function deleteBook(id) {
 
   await pool.query("DELETE FROM books WHERE id = $1", [bookId]);
   return bookResult.rows[0];
+}
+
+export async function importBook(data, lookupBook) {
+  const isbn = normalizeIsbn(data?.isbn);
+  const externalBook = await lookupBook(isbn);
+
+  return createBook({
+    title: externalBook.title,
+    author: externalBook.author,
+    isbn,
+  });
 }

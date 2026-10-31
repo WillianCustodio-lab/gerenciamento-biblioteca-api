@@ -1,21 +1,16 @@
+const BASE_URL = "https://openlibrary.org";
+
 function createError(message, statusCode) {
   const error = new Error(message);
   error.statusCode = statusCode;
   return error;
 }
 
-export async function findBookByIsbn(isbn) {
-  const url = new URL("https://openlibrary.org/search.json");
-
-  url.searchParams.set("q", `isbn:${isbn}`);
-  url.searchParams.set("fields", "title,author_name");
-  url.searchParams.set("limit", "1");
-
+async function requestJson(path) {
   let response;
-  let data;
 
   try {
-    response = await fetch(url, {
+    response = await fetch(`${BASE_URL}${path}`, {
       headers: {
         Accept: "application/json",
         "User-Agent":
@@ -23,10 +18,6 @@ export async function findBookByIsbn(isbn) {
       },
       signal: AbortSignal.timeout(8000),
     });
-
-    if (response.ok) {
-      data = await response.json();
-    }
   } catch {
     throw createError(
       "Não foi possível consultar a Open Library. Tente novamente.",
@@ -34,46 +25,68 @@ export async function findBookByIsbn(isbn) {
     );
   }
 
+  if (response.status === 404) {
+    return null;
+  }
+
   if (!response.ok) {
     throw createError(
-      "A Open Library está indisponível no momento. Tente novamente.",
+      "A Open Library está indisponível. Tente novamente.",
       503,
     );
   }
 
-  if (!Array.isArray(data?.docs)) {
+  try {
+    return await response.json();
+  } catch {
     throw createError(
-      "A Open Library retornou uma resposta inesperada.",
+      "A Open Library retornou uma resposta inválida.",
       502,
     );
   }
+}
 
-  const externalBook = data.docs[0];
+export async function findBookByIsbn(isbn) {
+  const edition = await requestJson(
+    `/isbn/${encodeURIComponent(isbn)}.json`,
+  );
 
-  if (!externalBook) {
+  if (!edition) {
     throw createError(
-      "ISBN não encontrado na Open Library. Utilize o cadastro manual.",
+      "ISBN não encontrado. Utilize o cadastro manual.",
       404,
     );
   }
 
   const title =
-    typeof externalBook.title === "string"
-      ? externalBook.title.trim()
-      : "";
+    typeof edition.title === "string" ? edition.title.trim() : "";
 
-  const authors = Array.isArray(externalBook.author_name)
-    ? externalBook.author_name
-        .filter((author) => typeof author === "string")
-        .map((author) => author.trim())
-        .filter(Boolean)
-    : [];
-
-  if (!title || authors.length === 0) {
+  if (!title || !Array.isArray(edition.authors) || !edition.authors.length) {
     throw createError(
       "O livro possui informações incompletas. Utilize o cadastro manual.",
       422,
     );
+  }
+
+  const authors = [];
+
+  for (const reference of edition.authors) {
+    const key = reference?.key;
+
+    if (typeof key !== "string" || !/^\/authors\/OL\d+A$/.test(key)) {
+      throw createError("Referência de autor inválida na Open Library.", 502);
+    }
+
+    const author = await requestJson(`${key}.json`);
+
+    if (typeof author?.name !== "string" || !author.name.trim()) {
+      throw createError(
+        "Autor não encontrado. Utilize o cadastro manual.",
+        422,
+      );
+    }
+
+    authors.push(author.name.trim());
   }
 
   return {
