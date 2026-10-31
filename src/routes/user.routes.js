@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  editCurrentUser,
   listUsers,
   showCurrentUser,
 } from "../controllers/user.controller.js";
@@ -10,6 +11,7 @@ const userRoutes = Router();
 
 userRoutes.use(authenticate);
 userRoutes.get("/me", showCurrentUser);
+userRoutes.put("/me", editCurrentUser);
 userRoutes.get("/", authorize("admin"), listUsers);
 
 export { userRoutes };
