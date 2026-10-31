@@ -4,6 +4,10 @@ import { authRoutes } from "./routes/auth.routes.js";
 import { userRoutes } from "./routes/user.routes.js";
 import { bookRoutes } from "./routes/book.routes.js";
 import { loanRoutes } from "./routes/loan.routes.js";
+import {
+  errorHandler,
+  notFound,
+} from "./middlewares/error-handler.middleware.js";
 
 const app = express();
 
@@ -29,5 +33,8 @@ app.get("/health", async (request, response) => {
     });
   }
 });
+
+app.use(notFound);
+app.use(errorHandler);
 
 export { app };

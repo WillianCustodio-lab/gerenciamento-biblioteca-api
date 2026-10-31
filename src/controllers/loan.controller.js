@@ -5,13 +5,7 @@ import {
   returnLoan,
 } from "../services/loan.service.js";
 
-function sendError(response, error, fallbackMessage) {
-  return response.status(error.statusCode || 500).json({
-    message: error.statusCode ? error.message : fallbackMessage,
-  });
-}
-
-export async function registerLoan(request, response) {
+export async function registerLoan(request, response, next) {
   try {
     const loan = await createLoan(request.body);
 
@@ -20,29 +14,29 @@ export async function registerLoan(request, response) {
       loan,
     });
   } catch (error) {
-    return sendError(response, error, "Erro interno ao registrar empréstimo.");
+    return next(error);
   }
 }
 
-export async function listLoans(request, response) {
+export async function listLoans(request, response, next) {
   try {
     const loans = await findAllLoans(request.query, request.user);
     return response.status(200).json({ loans });
   } catch (error) {
-    return sendError(response, error, "Erro interno ao consultar empréstimos.");
+    return next(error);
   }
 }
 
-export async function showLoan(request, response) {
+export async function showLoan(request, response, next) {
   try {
     const loan = await findLoanById(request.params.id, request.user);
     return response.status(200).json({ loan });
   } catch (error) {
-    return sendError(response, error, "Erro interno ao consultar empréstimo.");
+    return next(error);
   }
 }
 
-export async function returnRegisteredLoan(request, response) {
+export async function returnRegisteredLoan(request, response, next) {
   try {
     const loan = await returnLoan(request.params.id);
 
@@ -51,6 +45,6 @@ export async function returnRegisteredLoan(request, response) {
       loan,
     });
   } catch (error) {
-    return sendError(response, error, "Erro interno ao registrar devolução.");
+    return next(error);
   }
 }

@@ -5,7 +5,7 @@ import {
   resetPassword,
 } from "../services/auth.service.js";
 
-export async function register(request, response) {
+export async function register(request, response, next) {
   try {
     const user = await registerUser(request.body);
 
@@ -14,15 +14,11 @@ export async function register(request, response) {
       user,
     });
   } catch (error) {
-    return response.status(error.statusCode || 500).json({
-      message: error.statusCode
-        ? error.message
-        : "Erro interno ao cadastrar usuário.",
-    });
+    return next(error);
   }
 }
 
-export async function login(request, response) {
+export async function login(request, response, next) {
   try {
     const result = await loginUser(request.body);
 
@@ -31,15 +27,11 @@ export async function login(request, response) {
       ...result,
     });
   } catch (error) {
-    return response.status(error.statusCode || 500).json({
-      message: error.statusCode
-        ? error.message
-        : "Erro interno ao realizar login.",
-    });
+    return next(error);
   }
 }
 
-export async function forgotPassword(request, response) {
+export async function forgotPassword(request, response, next) {
   try {
     await requestPasswordReset(request.body);
 
@@ -47,15 +39,11 @@ export async function forgotPassword(request, response) {
       message: "Se o e-mail estiver cadastrado, as instruções serão enviadas.",
     });
   } catch (error) {
-    return response.status(error.statusCode || 500).json({
-      message: error.statusCode
-        ? error.message
-        : "Não foi possível enviar o e-mail de recuperação.",
-    });
+    return next(error);
   }
 }
 
-export async function changePassword(request, response) {
+export async function changePassword(request, response, next) {
   try {
     await resetPassword(request.body);
 
@@ -63,10 +51,6 @@ export async function changePassword(request, response) {
       message: "Senha alterada com sucesso.",
     });
   } catch (error) {
-    return response.status(error.statusCode || 500).json({
-      message: error.statusCode
-        ? error.message
-        : "Erro interno ao alterar a senha.",
-    });
+    return next(error);
   }
 }

@@ -3,7 +3,7 @@ import {
   findUserById,
 } from "../services/user.service.js";
 
-export async function showCurrentUser(request, response) {
+export async function showCurrentUser(request, response, next) {
   try {
     const user = await findUserById(request.user.id);
 
@@ -14,20 +14,16 @@ export async function showCurrentUser(request, response) {
     }
 
     return response.status(200).json({ user });
-  } catch {
-    return response.status(500).json({
-      message: "Erro interno ao consultar usuário.",
-    });
+  } catch (error) {
+    return next(error);
   }
 }
 
-export async function listUsers(request, response) {
+export async function listUsers(request, response, next) {
   try {
     const users = await findAllUsers();
     return response.status(200).json({ users });
-  } catch {
-    return response.status(500).json({
-      message: "Erro interno ao consultar usuários.",
-    });
+  } catch (error) {
+    return next(error);
   }
 }

@@ -9,13 +9,7 @@ import {
   importBook,
 } from "../services/book.service.js";
 
-function sendError(response, error, fallbackMessage) {
-  return response.status(error.statusCode || 500).json({
-    message: error.statusCode ? error.message : fallbackMessage,
-  });
-}
-
-export async function registerImportedBook(request, response) {
+export async function registerImportedBook(request, response, next) {
   try {
     const book = await importBook(request.body, findBookByIsbn);
 
@@ -24,11 +18,11 @@ export async function registerImportedBook(request, response) {
       book,
     });
   } catch (error) {
-    return sendError(response, error, "Erro interno ao importar livro.");
+    return next(error);
   }
 }
 
-export async function registerBook(request, response) {
+export async function registerBook(request, response, next) {
   try {
     const book = await createBook(request.body);
 
@@ -37,29 +31,29 @@ export async function registerBook(request, response) {
       book,
     });
   } catch (error) {
-    return sendError(response, error, "Erro interno ao cadastrar livro.");
+    return next(error);
   }
 }
 
-export async function listBooks(request, response) {
+export async function listBooks(request, response, next) {
   try {
     const books = await findAllBooks(request.query);
     return response.status(200).json({ books });
   } catch (error) {
-    return sendError(response, error, "Erro interno ao consultar livros.");
+    return next(error);
   }
 }
 
-export async function showBook(request, response) {
+export async function showBook(request, response, next) {
   try {
     const book = await findBookById(request.params.id);
     return response.status(200).json({ book });
   } catch (error) {
-    return sendError(response, error, "Erro interno ao consultar livro.");
+    return next(error);
   }
 }
 
-export async function editBook(request, response) {
+export async function editBook(request, response, next) {
   try {
     const book = await updateBook(request.params.id, request.body);
 
@@ -68,11 +62,11 @@ export async function editBook(request, response) {
       book,
     });
   } catch (error) {
-    return sendError(response, error, "Erro interno ao atualizar livro.");
+    return next(error);
   }
 }
 
-export async function removeBook(request, response) {
+export async function removeBook(request, response, next) {
   try {
     const book = await deleteBook(request.params.id);
 
@@ -81,6 +75,6 @@ export async function removeBook(request, response) {
       book,
     });
   } catch (error) {
-    return sendError(response, error, "Erro interno ao excluir livro.");
+    return next(error);
   }
 }
