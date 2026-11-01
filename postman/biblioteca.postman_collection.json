@@ -1,0 +1,3571 @@
+{
+  "info": {
+    "name": "Gerenciamento de Biblioteca API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Collection de avaliação do Sistema de Gerenciamento de Biblioteca.\nContém todas as 19 combinações de método e caminho da API, além de variações de fluxo e permissões. Respostas salvas são exemplos ilustrativos, não registros reais de execução.\n\nPREPARAÇÃO\n1. Inicie o projeto com Docker seguindo o README.\n2. Abra Variables nesta collection. Preencha user_email, user_password, admin_email e admin_password. Use contas de teste e um e-mail acessível para a recuperação. Não precisa importar um environment.\n3. Cadastre a conta comum pela pasta 01. Para a conta administrativa, execute docker compose exec app npm run create-admin no terminal do projeto, conforme o README.\n4. Preencha admin_email e admin_password com as credenciais criadas pelo comando; depois execute os dois logins. Os tokens e os IDs são salvos automaticamente nas variáveis desta collection.\n\nFLUXO PRINCIPAL\n00 Sistema -> 01 Autenticação (cadastros e logins) -> 02 Usuários (consultas e atualização) -> 03 Livros (cadastro, importação e consultas) -> 04 Empréstimos (cadastro, consultas e devolução).\nO empréstimo usa user_id e book_id capturados. due_date é gerada automaticamente para daqui a 7 dias.\nNa recuperação, copie o código recebido no e-mail para reset_token e preencha new_password. Use Login com a nova senha após redefinir. Atualize user_password manualmente se quiser reutilizar o login comum.\nA recuperação de exemplo usa user_email, mesmo após o login administrativo. Para recuperar a conta administrativa, envie {{admin_email}} no campo email de Solicitar recuperação de senha; após redefinir, atualize admin_password e execute Login do administrador. Restaure o campo email para {{user_email}} para voltar ao fluxo comum. Não é necessário um JWT para recuperar a senha.\n\nEXCLUSÕES\nUse Cadastrar usuário para testar exclusão e Cadastrar livro para testar exclusão antes de remover. São cadastros comuns destinados a esse teste; não existe um tipo especial de usuário ou livro para exclusão. Seus IDs ficam em disposable_user_id e disposable_book_id e não substituem os IDs do fluxo de empréstimo.\nUsuários e livros com qualquer histórico de empréstimos não podem ser excluídos, mesmo depois da devolução.\n\nExecute as requisições individualmente: há etapas manuais de criação do administrador pelo terminal e leitura de e-mail. Executar a collection inteira sem essas etapas não representa um fluxo automático completo.\nUse somente esta collection como origem das variáveis, evitando variáveis de environment com os mesmos nomes.\nOs arquivos de entrega não contêm credenciais ou tokens reais. Ao exportar novamente, remova valores sensíveis e respostas reais de login antes de versionar."
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{user_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string",
+      "description": "Endereço da API, sem barra final."
+    },
+    {
+      "key": "user_name",
+      "value": "Usuário de demonstração",
+      "type": "string",
+      "description": "Nome da conta comum de teste."
+    },
+    {
+      "key": "user_email",
+      "value": "",
+      "type": "string",
+      "description": "Informe um e-mail de teste ao qual tenha acesso para receber a recuperação."
+    },
+    {
+      "key": "user_password",
+      "value": "",
+      "type": "string",
+      "description": "Senha de teste com pelo menos 8 caracteres."
+    },
+    {
+      "key": "admin_email",
+      "value": "",
+      "type": "string",
+      "description": "E-mail da conta criada com docker compose exec app npm run create-admin."
+    },
+    {
+      "key": "admin_password",
+      "value": "",
+      "type": "string",
+      "description": "Senha dessa conta administradora."
+    },
+    {
+      "key": "updated_user_name",
+      "value": "Usuário atualizado",
+      "type": "string",
+      "description": "Nome enviado pela atualização do próprio cadastro."
+    },
+    {
+      "key": "new_password",
+      "value": "",
+      "type": "string",
+      "description": "Nova senha de teste, usada na recuperação; mínimo de 8 caracteres."
+    },
+    {
+      "key": "reset_token",
+      "value": "",
+      "type": "string",
+      "description": "Código recebido por e-mail; é diferente dos tokens JWT de login."
+    },
+    {
+      "key": "disposable_user_email",
+      "value": "",
+      "type": "string",
+      "description": "E-mail diferente para criar a conta sem histórico que será excluída."
+    },
+    {
+      "key": "user_token",
+      "value": "",
+      "type": "string",
+      "description": "Preenchido pelo login comum. Não publicar tokens reais."
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string",
+      "description": "Preenchido pelo login administrador. Não publicar tokens reais."
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string",
+      "description": "Preenchido pelo cadastro ou login da conta comum."
+    },
+    {
+      "key": "admin_id",
+      "value": "",
+      "type": "string",
+      "description": "Preenchido pelo cadastro ou login da conta administradora."
+    },
+    {
+      "key": "book_id",
+      "value": "",
+      "type": "string",
+      "description": "Preenchido pelo cadastro manual do exemplar usado no empréstimo."
+    },
+    {
+      "key": "imported_book_id",
+      "value": "",
+      "type": "string",
+      "description": "Preenchido pela importação; não substitui o exemplar usado no empréstimo."
+    },
+    {
+      "key": "loan_id",
+      "value": "",
+      "type": "string",
+      "description": "Preenchido ao registrar o empréstimo."
+    },
+    {
+      "key": "disposable_user_id",
+      "value": "",
+      "type": "string",
+      "description": "Preenchido pelo cadastro da conta para exclusão."
+    },
+    {
+      "key": "disposable_book_id",
+      "value": "",
+      "type": "string",
+      "description": "Preenchido pelo cadastro do exemplar para exclusão."
+    },
+    {
+      "key": "due_date",
+      "value": "",
+      "type": "string",
+      "description": "Calculada automaticamente como data atual mais 7 dias ao registrar empréstimo."
+    },
+    {
+      "key": "isbn",
+      "value": "9780140328721",
+      "type": "string",
+      "description": "ISBN utilizado no exemplo da integração com a Open Library."
+    }
+  ],
+  "item": [
+    {
+      "name": "00 Sistema",
+      "description": "Verificação pública da API e do PostgreSQL.",
+      "item": [
+        {
+          "name": "Verificar aplicação e banco",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{base_url}}/health",
+            "description": "Pública. Esperado 200 quando o PostgreSQL está acessível; 503 em caso de falha."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "url": "{{base_url}}/health",
+                "description": "Pública. Esperado 200 quando o PostgreSQL está acessível; 503 em caso de falha."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"ok\",\n  \"database\": \"connected\",\n  \"databaseTime\": \"2026-11-01T12:00:00.000Z\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 Autenticação",
+      "description": "Cadastre a conta comum pela API e a conta administrativa pelo comando create-admin do README. Depois execute os logins. A recuperação exige interação com o e-mail.",
+      "item": [
+        {
+          "name": "01 Cadastrar usuário comum",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{base_url}}/auth/register",
+            "description": "Pública. Nome, e-mail e senha obrigatórios. Senha mínima de 8 caracteres. Salva user_id. Se a conta já existe, utilize o login.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{user_name}}\",\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"user_email\",\"user_password\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  if (data.user.id !== undefined && data.user.id !== null) pm.collectionVariables.set(\"user_id\", String(data.user.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 Created - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "url": "{{base_url}}/auth/register",
+                "description": "Pública. Nome, e-mail e senha obrigatórios. Senha mínima de 8 caracteres. Salva user_id. Se a conta já existe, utilize o login.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"{{user_name}}\",\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Usuário cadastrado com sucesso.\",\n  \"user\": {\n    \"id\": \"1\",\n    \"name\": \"Usuário de demonstração\",\n    \"email\": \"usuario@example.invalid\",\n    \"role\": \"user\",\n    \"created_at\": \"2026-11-01T12:00:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "409 Conflict - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "url": "{{base_url}}/auth/register",
+                "description": "Pública. Nome, e-mail e senha obrigatórios. Senha mínima de 8 caracteres. Salva user_id. Se a conta já existe, utilize o login.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"{{user_name}}\",\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"E-mail já cadastrado.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "02 Login do usuário comum",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{base_url}}/auth/login",
+            "description": "Pública. Salva user_token e user_id. A conta deve ter perfil user.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.unset('user_token');",
+                  "const required = [\"user_email\",\"user_password\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.test('Perfil esperado: user', function () { pm.expect(data.user.role).to.eql('user'); });",
+                  "  if (data.user.role === 'user') {",
+                  "    pm.collectionVariables.set('user_token', data.token);",
+                  "    pm.collectionVariables.set('user_id', String(data.user.id));",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "url": "{{base_url}}/auth/login",
+                "description": "Pública. Salva user_token e user_id. A conta deve ter perfil user.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Login realizado com sucesso.\",\n  \"token\": \"TOKEN_GERADO_NO_LOGIN\",\n  \"user\": {\n    \"id\": \"1\",\n    \"name\": \"Usuário de demonstração\",\n    \"email\": \"usuario@example.invalid\",\n    \"role\": \"user\"\n  }\n}"
+            },
+            {
+              "name": "401 Unauthorized - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "url": "{{base_url}}/auth/login",
+                "description": "Pública. Salva user_token e user_id. A conta deve ter perfil user.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"E-mail ou senha inválidos.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "03 Login do administrador",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{base_url}}/auth/login",
+            "description": "Pública. Crie a conta com docker compose exec app npm run create-admin, seguindo o README. Salva admin_token e admin_id. A conta precisa possuir perfil admin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.unset('admin_token');",
+                  "const required = [\"admin_email\",\"admin_password\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.test('Perfil esperado: admin', function () { pm.expect(data.user.role).to.eql('admin'); });",
+                  "  if (data.user.role === 'admin') {",
+                  "    pm.collectionVariables.set('admin_token', data.token);",
+                  "    pm.collectionVariables.set('admin_id', String(data.user.id));",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "url": "{{base_url}}/auth/login",
+                "description": "Pública. Crie a conta com docker compose exec app npm run create-admin, seguindo o README. Salva admin_token e admin_id. A conta precisa possuir perfil admin.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Login realizado com sucesso.\",\n  \"token\": \"TOKEN_GERADO_NO_LOGIN\",\n  \"user\": {\n    \"id\": \"2\",\n    \"name\": \"Administrador de demonstração\",\n    \"email\": \"admin@example.invalid\",\n    \"role\": \"admin\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "04 Solicitar recuperação de senha",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{base_url}}/auth/forgot-password",
+            "description": "Pública. Requer SMTP configurado. A resposta não revela se a conta existe. Abra o e-mail e copie o código para reset_token; ele expira em 15 minutos.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"user_email\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "url": "{{base_url}}/auth/forgot-password",
+                "description": "Pública. Requer SMTP configurado. A resposta não revela se a conta existe. Abra o e-mail e copie o código para reset_token; ele expira em 15 minutos.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{user_email}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Se o e-mail estiver cadastrado, as instruções serão enviadas.\"\n}"
+            },
+            {
+              "name": "400 Bad Request - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "url": "{{base_url}}/auth/forgot-password",
+                "description": "Pública. Requer SMTP configurado. A resposta não revela se a conta existe. Abra o e-mail e copie o código para reset_token; ele expira em 15 minutos.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{user_email}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"E-mail é obrigatório.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "05 Redefinir senha com código recebido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{base_url}}/auth/reset-password",
+            "description": "Pública. O código é o recebido no e-mail, não o JWT. Nova senha com no mínimo 8 caracteres. Após o sucesso, utilize o login com a nova senha. A reutilização do código deve retornar 400.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{reset_token}}\",\n  \"password\": \"{{new_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"reset_token\",\"new_password\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "if (pm.response.code === 200) pm.collectionVariables.unset('reset_token');"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "url": "{{base_url}}/auth/reset-password",
+                "description": "Pública. O código é o recebido no e-mail, não o JWT. Nova senha com no mínimo 8 caracteres. Após o sucesso, utilize o login com a nova senha. A reutilização do código deve retornar 400.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"{{reset_token}}\",\n  \"password\": \"{{new_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Senha alterada com sucesso.\"\n}"
+            },
+            {
+              "name": "400 Bad Request - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "url": "{{base_url}}/auth/reset-password",
+                "description": "Pública. O código é o recebido no e-mail, não o JWT. Nova senha com no mínimo 8 caracteres. Após o sucesso, utilize o login com a nova senha. A reutilização do código deve retornar 400.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"{{reset_token}}\",\n  \"password\": \"{{new_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Token de recuperação inválido ou expirado.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "06 Login com a nova senha",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{base_url}}/auth/login",
+            "description": "Confirma a recuperação e atualiza user_token. Se quiser reutilizar o login comum, copie manualmente a nova senha para user_password.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{new_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.unset('user_token');",
+                  "const required = [\"user_email\",\"new_password\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.test('Perfil esperado: user', function () { pm.expect(data.user.role).to.eql('user'); });",
+                  "  if (data.user.role === 'user') {",
+                  "    pm.collectionVariables.set('user_token', data.token);",
+                  "    pm.collectionVariables.set('user_id', String(data.user.id));",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "url": "{{base_url}}/auth/login",
+                "description": "Confirma a recuperação e atualiza user_token. Se quiser reutilizar o login comum, copie manualmente a nova senha para user_password.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{new_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Login realizado com sucesso.\",\n  \"token\": \"TOKEN_GERADO_NO_LOGIN\",\n  \"user\": {\n    \"id\": \"1\",\n    \"name\": \"Usuário de demonstração\",\n    \"email\": \"usuario@example.invalid\",\n    \"role\": \"user\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 Usuários",
+      "description": "Consulta e atualização do próprio cadastro; listagem e exclusão administrativas. A exclusão usa uma conta separada, sem histórico.",
+      "item": [
+        {
+          "name": "Consultar próprio cadastro",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{base_url}}/users/me",
+            "description": "Qualquer usuário autenticado. O token identifica a conta; não é necessário enviar ID."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"user_token\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{user_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/users/me",
+                "description": "Qualquer usuário autenticado. O token identifica a conta; não é necessário enviar ID."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"user\": {\n    \"id\": \"1\",\n    \"name\": \"Usuário de demonstração\",\n    \"email\": \"usuario@example.invalid\",\n    \"role\": \"user\",\n    \"created_at\": \"2026-11-01T12:00:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Atualizar próprio cadastro",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{base_url}}/users/me",
+            "description": "Qualquer usuário autenticado. Envie nome e e-mail. Este exemplo mantém o e-mail de login. Para alterá-lo, ajuste user_email antes de enviar. Senha e perfil não são alterados. Limites: nome 120, e-mail 255.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{updated_user_name}}\",\n  \"email\": \"{{user_email}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"user_email\",\"user_token\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{user_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/users/me",
+                "description": "Qualquer usuário autenticado. Envie nome e e-mail. Este exemplo mantém o e-mail de login. Para alterá-lo, ajuste user_email antes de enviar. Senha e perfil não são alterados. Limites: nome 120, e-mail 255.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"{{updated_user_name}}\",\n  \"email\": \"{{user_email}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Cadastro atualizado com sucesso.\",\n  \"user\": {\n    \"id\": \"1\",\n    \"name\": \"Usuário atualizado\",\n    \"email\": \"usuario@example.invalid\",\n    \"role\": \"user\",\n    \"created_at\": \"2026-11-01T12:00:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "400 Bad Request - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{user_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/users/me",
+                "description": "Qualquer usuário autenticado. Envie nome e e-mail. Este exemplo mantém o e-mail de login. Para alterá-lo, ajuste user_email antes de enviar. Senha e perfil não são alterados. Limites: nome 120, e-mail 255.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"{{updated_user_name}}\",\n  \"email\": \"{{user_email}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Informe um e-mail válido.\"\n}"
+            },
+            {
+              "name": "409 Conflict - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{user_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/users/me",
+                "description": "Qualquer usuário autenticado. Envie nome e e-mail. Este exemplo mantém o e-mail de login. Para alterá-lo, ajuste user_email antes de enviar. Senha e perfil não são alterados. Limites: nome 120, e-mail 255.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"{{updated_user_name}}\",\n  \"email\": \"{{user_email}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"E-mail já cadastrado para outro usuário.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Listar usuários como administrador",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{base_url}}/users",
+            "description": "Somente admin. A resposta contém dados públicos e não inclui hashes de senhas."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"admin_token\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/users",
+                "description": "Somente admin. A resposta contém dados públicos e não inclui hashes de senhas."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"users\": [\n    {\n      \"id\": \"1\",\n      \"name\": \"Usuário de demonstração\",\n      \"email\": \"usuario@example.invalid\",\n      \"role\": \"user\",\n      \"created_at\": \"2026-11-01T12:00:00.000Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Cadastrar usuário para testar exclusão",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{base_url}}/auth/register",
+            "description": "Preparação da exclusão. Use um e-mail de teste diferente de user_email e admin_email. Salva somente disposable_user_id. Não empreste livros para esta conta.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Conta descartável de teste\",\n  \"email\": \"{{disposable_user_email}}\",\n  \"password\": \"{{user_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"disposable_user_email\",\"user_password\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  if (data.user.id !== undefined && data.user.id !== null) pm.collectionVariables.set(\"disposable_user_id\", String(data.user.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 Created - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "url": "{{base_url}}/auth/register",
+                "description": "Preparação da exclusão. Use um e-mail de teste diferente de user_email e admin_email. Salva somente disposable_user_id. Não empreste livros para esta conta.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Conta descartável de teste\",\n  \"email\": \"{{disposable_user_email}}\",\n  \"password\": \"{{user_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Usuário cadastrado com sucesso.\",\n  \"user\": {\n    \"id\": \"3\",\n    \"name\": \"Conta descartável de teste\",\n    \"email\": \"descartavel@example.invalid\",\n    \"role\": \"user\",\n    \"created_at\": \"2026-11-01T12:00:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Excluir conta sem histórico",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{base_url}}/users/{{disposable_user_id}}",
+            "description": "Somente admin. Exclui definitivamente a conta preparada na requisição anterior. Não permite excluir a própria conta nem usuários com histórico ativo ou devolvido."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const target = String(pm.variables.get('disposable_user_id') || '');",
+                  "if (target && [String(pm.variables.get('user_id')), String(pm.variables.get('admin_id'))].includes(target)) { throw new Error('Use a conta criada em Cadastrar usuário para testar exclusão.'); }",
+                  "const required = [\"disposable_user_id\",\"admin_token\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "if (pm.response.code === 200) pm.collectionVariables.unset('disposable_user_id');"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/users/{{disposable_user_id}}",
+                "description": "Somente admin. Exclui definitivamente a conta preparada na requisição anterior. Não permite excluir a própria conta nem usuários com histórico ativo ou devolvido."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Usuário excluído com sucesso.\",\n  \"user\": {\n    \"id\": \"3\",\n    \"name\": \"Conta descartável de teste\",\n    \"email\": \"descartavel@example.invalid\",\n    \"role\": \"user\",\n    \"created_at\": \"2026-11-01T12:00:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "409 Conflict - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/users/{{disposable_user_id}}",
+                "description": "Somente admin. Exclui definitivamente a conta preparada na requisição anterior. Não permite excluir a própria conta nem usuários com histórico ativo ou devolvido."
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Não é possível excluir um usuário que possui histórico de empréstimos.\"\n}"
+            },
+            {
+              "name": "404 Not Found - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/users/{{disposable_user_id}}",
+                "description": "Somente admin. Exclui definitivamente a conta preparada na requisição anterior. Não permite excluir a própria conta nem usuários com histórico ativo ou devolvido."
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Usuário não encontrado.\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 Livros",
+      "description": "Um registro representa um exemplar físico. O mesmo ISBN pode identificar vários exemplares. As exclusões usam um exemplar separado, sem histórico.",
+      "item": [
+        {
+          "name": "01 Cadastrar exemplar manualmente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{base_url}}/books",
+            "description": "Somente admin. Salva book_id para o fluxo de empréstimo. Título, autor e ISBN são obrigatórios. Status inicial available.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Matilda\",\n  \"author\": \"Roald Dahl\",\n  \"isbn\": \"{{isbn}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"isbn\",\"admin_token\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  if (data.book.id !== undefined && data.book.id !== null) pm.collectionVariables.set(\"book_id\", String(data.book.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 Created - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/books",
+                "description": "Somente admin. Salva book_id para o fluxo de empréstimo. Título, autor e ISBN são obrigatórios. Status inicial available.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Matilda\",\n  \"author\": \"Roald Dahl\",\n  \"isbn\": \"{{isbn}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Livro cadastrado com sucesso.\",\n  \"book\": {\n    \"id\": \"1\",\n    \"title\": \"Matilda\",\n    \"author\": \"Roald Dahl\",\n    \"isbn\": \"9780140328721\",\n    \"status\": \"available\",\n    \"created_at\": \"2026-11-01T12:00:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "02 Importar exemplar da Open Library por ISBN",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{base_url}}/books/import",
+            "description": "Somente admin. Consulta a edição e seus autores na Open Library e salva um novo exemplar no PostgreSQL. Salva imported_book_id, sem substituir book_id. Cada envio bem-sucedido cria um exemplar. Se os dados não existirem ou estiverem incompletos, utilize o cadastro manual.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isbn\": \"{{isbn}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"isbn\",\"admin_token\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  if (data.book.id !== undefined && data.book.id !== null) pm.collectionVariables.set(\"imported_book_id\", String(data.book.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 Created - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/books/import",
+                "description": "Somente admin. Consulta a edição e seus autores na Open Library e salva um novo exemplar no PostgreSQL. Salva imported_book_id, sem substituir book_id. Cada envio bem-sucedido cria um exemplar. Se os dados não existirem ou estiverem incompletos, utilize o cadastro manual.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"isbn\": \"{{isbn}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Livro importado e cadastrado com sucesso.\",\n  \"book\": {\n    \"id\": \"2\",\n    \"title\": \"Matilda\",\n    \"author\": \"Roald Dahl\",\n    \"isbn\": \"9780140328721\",\n    \"status\": \"available\",\n    \"created_at\": \"2026-11-01T12:00:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "404 Not Found - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/books/import",
+                "description": "Somente admin. Consulta a edição e seus autores na Open Library e salva um novo exemplar no PostgreSQL. Salva imported_book_id, sem substituir book_id. Cada envio bem-sucedido cria um exemplar. Se os dados não existirem ou estiverem incompletos, utilize o cadastro manual.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"isbn\": \"{{isbn}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"ISBN não encontrado. Utilize o cadastro manual.\"\n}"
+            },
+            {
+              "name": "422 Unprocessable Entity - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/books/import",
+                "description": "Somente admin. Consulta a edição e seus autores na Open Library e salva um novo exemplar no PostgreSQL. Salva imported_book_id, sem substituir book_id. Cada envio bem-sucedido cria um exemplar. Se os dados não existirem ou estiverem incompletos, utilize o cadastro manual.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"isbn\": \"{{isbn}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"O livro possui informações incompletas. Utilize o cadastro manual.\"\n}"
+            },
+            {
+              "name": "503 Service Unavailable - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/books/import",
+                "description": "Somente admin. Consulta a edição e seus autores na Open Library e salva um novo exemplar no PostgreSQL. Salva imported_book_id, sem substituir book_id. Cada envio bem-sucedido cria um exemplar. Se os dados não existirem ou estiverem incompletos, utilize o cadastro manual.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"isbn\": \"{{isbn}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Service Unavailable",
+              "code": 503,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"A Open Library está indisponível. Tente novamente.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "03 Listar catálogo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{base_url}}/books",
+            "description": "Qualquer usuário autenticado. Retorna todos os exemplares."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"user_token\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{user_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/books",
+                "description": "Qualquer usuário autenticado. Retorna todos os exemplares."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"books\": [\n    {\n      \"id\": \"1\",\n      \"title\": \"Matilda\",\n      \"author\": \"Roald Dahl\",\n      \"isbn\": \"9780140328721\",\n      \"status\": \"available\",\n      \"created_at\": \"2026-11-01T12:00:00.000Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "04 Filtrar exemplares disponíveis",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{base_url}}/books?status=available",
+            "description": "Qualquer usuário autenticado. status é opcional e aceita available ou loaned. Troque para loaned para listar emprestados."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"user_token\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{user_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/books?status=available",
+                "description": "Qualquer usuário autenticado. status é opcional e aceita available ou loaned. Troque para loaned para listar emprestados."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"books\": [\n    {\n      \"id\": \"1\",\n      \"title\": \"Matilda\",\n      \"author\": \"Roald Dahl\",\n      \"isbn\": \"9780140328721\",\n      \"status\": \"available\",\n      \"created_at\": \"2026-11-01T12:00:00.000Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "05 Consultar exemplar pelo ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{base_url}}/books/{{book_id}}",
+            "description": "Qualquer usuário autenticado. Utiliza o ID salvo no cadastro manual."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"book_id\",\"user_token\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{user_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/books/{{book_id}}",
+                "description": "Qualquer usuário autenticado. Utiliza o ID salvo no cadastro manual."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"book\": {\n    \"id\": \"1\",\n    \"title\": \"Matilda\",\n    \"author\": \"Roald Dahl\",\n    \"isbn\": \"9780140328721\",\n    \"status\": \"available\",\n    \"created_at\": \"2026-11-01T12:00:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "404 Not Found - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{user_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/books/{{book_id}}",
+                "description": "Qualquer usuário autenticado. Utiliza o ID salvo no cadastro manual."
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Livro não encontrado.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "06 Atualizar dados do exemplar",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{base_url}}/books/{{book_id}}",
+            "description": "Somente admin. Envie título, autor e ISBN. A disponibilidade é controlada pelo empréstimo e pela devolução.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Matilda\",\n  \"author\": \"Roald Dahl\",\n  \"isbn\": \"{{isbn}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"book_id\",\"isbn\",\"admin_token\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/books/{{book_id}}",
+                "description": "Somente admin. Envie título, autor e ISBN. A disponibilidade é controlada pelo empréstimo e pela devolução.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Matilda\",\n  \"author\": \"Roald Dahl\",\n  \"isbn\": \"{{isbn}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Livro atualizado com sucesso.\",\n  \"book\": {\n    \"id\": \"1\",\n    \"title\": \"Matilda\",\n    \"author\": \"Roald Dahl\",\n    \"isbn\": \"9780140328721\",\n    \"status\": \"available\",\n    \"created_at\": \"2026-11-01T12:00:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "07 Cadastrar livro para testar exclusão",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{base_url}}/books",
+            "description": "Somente admin. Cria outro exemplar para testar DELETE. Salva somente disposable_book_id. Não empreste esse exemplar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Matilda\",\n  \"author\": \"Roald Dahl\",\n  \"isbn\": \"{{isbn}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"isbn\",\"admin_token\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  if (data.book.id !== undefined && data.book.id !== null) pm.collectionVariables.set(\"disposable_book_id\", String(data.book.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 Created - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/books",
+                "description": "Somente admin. Cria outro exemplar para testar DELETE. Salva somente disposable_book_id. Não empreste esse exemplar.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Matilda\",\n  \"author\": \"Roald Dahl\",\n  \"isbn\": \"{{isbn}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Livro cadastrado com sucesso.\",\n  \"book\": {\n    \"id\": \"3\",\n    \"title\": \"Matilda\",\n    \"author\": \"Roald Dahl\",\n    \"isbn\": \"9780140328721\",\n    \"status\": \"available\",\n    \"created_at\": \"2026-11-01T12:00:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "08 Excluir exemplar sem histórico",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{base_url}}/books/{{disposable_book_id}}",
+            "description": "Somente admin. Exclui o exemplar separado. Exemplares com qualquer histórico de empréstimos não podem ser excluídos."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (String(pm.variables.get('disposable_book_id')) === String(pm.variables.get('book_id'))) { throw new Error('Use o exemplar criado em Cadastrar livro para testar exclusão.'); }",
+                  "const required = [\"disposable_book_id\",\"admin_token\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "if (pm.response.code === 200) pm.collectionVariables.unset('disposable_book_id');"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/books/{{disposable_book_id}}",
+                "description": "Somente admin. Exclui o exemplar separado. Exemplares com qualquer histórico de empréstimos não podem ser excluídos."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Livro excluído com sucesso.\",\n  \"book\": {\n    \"id\": \"3\",\n    \"title\": \"Matilda\",\n    \"author\": \"Roald Dahl\",\n    \"isbn\": \"9780140328721\",\n    \"status\": \"available\",\n    \"created_at\": \"2026-11-01T12:00:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "409 Conflict - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/books/{{disposable_book_id}}",
+                "description": "Somente admin. Exclui o exemplar separado. Exemplares com qualquer histórico de empréstimos não podem ser excluídos."
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Não é possível excluir um livro que possui histórico de empréstimos.\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 Empréstimos",
+      "description": "Execute depois dos cadastros e logins. O administrador registra empréstimo e devolução. O usuário comum visualiza apenas seus próprios registros.",
+      "item": [
+        {
+          "name": "01 Registrar empréstimo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{base_url}}/loans",
+            "description": "Somente admin. IDs são aceitos como textos numéricos e convertidos pelo service. O livro deve estar disponível. due_date é preenchida automaticamente para daqui a 7 dias antes do envio. Salva loan_id. Repetir antes da devolução retorna 409.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{user_id}}\",\n  \"book_id\": \"{{book_id}}\",\n  \"due_date\": \"{{due_date}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const dueDate = new Date();",
+                  "dueDate.setUTCDate(dueDate.getUTCDate() + 7);",
+                  "pm.collectionVariables.set('due_date', dueDate.toISOString().slice(0, 10));",
+                  "const required = [\"user_id\",\"book_id\",\"admin_token\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  if (data.loan.id !== undefined && data.loan.id !== null) pm.collectionVariables.set(\"loan_id\", String(data.loan.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 Created - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/loans",
+                "description": "Somente admin. IDs são aceitos como textos numéricos e convertidos pelo service. O livro deve estar disponível. due_date é preenchida automaticamente para daqui a 7 dias antes do envio. Salva loan_id. Repetir antes da devolução retorna 409.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"user_id\": \"{{user_id}}\",\n  \"book_id\": \"{{book_id}}\",\n  \"due_date\": \"{{due_date}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Empréstimo registrado com sucesso.\",\n  \"loan\": {\n    \"id\": \"1\",\n    \"user_id\": \"1\",\n    \"book_id\": \"1\",\n    \"loan_date\": \"2026-11-01\",\n    \"due_date\": \"2026-11-08\",\n    \"returned_at\": null,\n    \"status\": \"active\"\n  }\n}"
+            },
+            {
+              "name": "409 Conflict - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/loans",
+                "description": "Somente admin. IDs são aceitos como textos numéricos e convertidos pelo service. O livro deve estar disponível. due_date é preenchida automaticamente para daqui a 7 dias antes do envio. Salva loan_id. Repetir antes da devolução retorna 409.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"user_id\": \"{{user_id}}\",\n  \"book_id\": \"{{book_id}}\",\n  \"due_date\": \"{{due_date}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"O livro não está disponível para empréstimo.\"\n}"
+            },
+            {
+              "name": "404 Not Found - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/loans",
+                "description": "Somente admin. IDs são aceitos como textos numéricos e convertidos pelo service. O livro deve estar disponível. due_date é preenchida automaticamente para daqui a 7 dias antes do envio. Salva loan_id. Repetir antes da devolução retorna 409.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"user_id\": \"{{user_id}}\",\n  \"book_id\": \"{{book_id}}\",\n  \"due_date\": \"{{due_date}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Usuário não encontrado.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "02 Listar todos como administrador",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{base_url}}/loans",
+            "description": "Admin vê todos os empréstimos. Filtro opcional: acrescente ?status=active ou ?status=returned."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"admin_token\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/loans",
+                "description": "Admin vê todos os empréstimos. Filtro opcional: acrescente ?status=active ou ?status=returned."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"loans\": [\n    {\n      \"id\": \"1\",\n      \"user_id\": \"1\",\n      \"book_id\": \"1\",\n      \"loan_date\": \"2026-11-01\",\n      \"due_date\": \"2026-11-08\",\n      \"returned_at\": null,\n      \"status\": \"active\",\n      \"user_name\": \"Usuário de demonstração\",\n      \"book_title\": \"Matilda\",\n      \"book_isbn\": \"9780140328721\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "03 Listar próprios como usuário comum",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{base_url}}/loans?status=active",
+            "description": "Usuário comum recebe somente seus empréstimos. Remova o filtro para ver o histórico completo ou troque para returned."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"user_token\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{user_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/loans?status=active",
+                "description": "Usuário comum recebe somente seus empréstimos. Remova o filtro para ver o histórico completo ou troque para returned."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"loans\": [\n    {\n      \"id\": \"1\",\n      \"user_id\": \"1\",\n      \"book_id\": \"1\",\n      \"loan_date\": \"2026-11-01\",\n      \"due_date\": \"2026-11-08\",\n      \"returned_at\": null,\n      \"status\": \"active\",\n      \"user_name\": \"Usuário de demonstração\",\n      \"book_title\": \"Matilda\",\n      \"book_isbn\": \"9780140328721\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "04 Consultar empréstimo pelo ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{base_url}}/loans/{{loan_id}}",
+            "description": "Usuário comum só consulta o próprio empréstimo; admin pode consultar qualquer um. Usa user_token porque o empréstimo de exemplo pertence a user_id."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"loan_id\",\"user_token\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{user_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/loans/{{loan_id}}",
+                "description": "Usuário comum só consulta o próprio empréstimo; admin pode consultar qualquer um. Usa user_token porque o empréstimo de exemplo pertence a user_id."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"loan\": {\n    \"id\": \"1\",\n    \"user_id\": \"1\",\n    \"book_id\": \"1\",\n    \"loan_date\": \"2026-11-01\",\n    \"due_date\": \"2026-11-08\",\n    \"returned_at\": null,\n    \"status\": \"active\",\n    \"user_name\": \"Usuário de demonstração\",\n    \"book_title\": \"Matilda\",\n    \"book_isbn\": \"9780140328721\"\n  }\n}"
+            },
+            {
+              "name": "404 Not Found - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{user_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/loans/{{loan_id}}",
+                "description": "Usuário comum só consulta o próprio empréstimo; admin pode consultar qualquer um. Usa user_token porque o empréstimo de exemplo pertence a user_id."
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Empréstimo não encontrado.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "05 Registrar devolução",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{base_url}}/loans/{{loan_id}}/return",
+            "description": "Somente admin. Sem corpo. Muda o empréstimo para returned, registra returned_at e torna o livro available. O histórico permanece. Uma segunda devolução retorna 409."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"loan_id\",\"admin_token\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/loans/{{loan_id}}/return",
+                "description": "Somente admin. Sem corpo. Muda o empréstimo para returned, registra returned_at e torna o livro available. O histórico permanece. Uma segunda devolução retorna 409."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Devolução registrada com sucesso.\",\n  \"loan\": {\n    \"id\": \"1\",\n    \"user_id\": \"1\",\n    \"book_id\": \"1\",\n    \"loan_date\": \"2026-11-01\",\n    \"due_date\": \"2026-11-08\",\n    \"returned_at\": \"2026-11-02\",\n    \"status\": \"returned\"\n  }\n}"
+            },
+            {
+              "name": "409 Conflict - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/loans/{{loan_id}}/return",
+                "description": "Somente admin. Sem corpo. Muda o empréstimo para returned, registra returned_at e torna o livro available. O histórico permanece. Uma segunda devolução retorna 409."
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Este empréstimo já foi devolvido.\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 Verificações de acesso",
+      "description": "Exemplos que devem retornar erros. As verificações do Postman consideram esses códigos como o resultado esperado.",
+      "item": [
+        {
+          "name": "Usuário comum não pode listar usuários",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{base_url}}/users",
+            "description": "Utiliza user_token. Uma resposta 403 confirma a restrição administrativa."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"user_token\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 403', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "403 Forbidden - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{user_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/users",
+                "description": "Utiliza user_token. Uma resposta 403 confirma a restrição administrativa."
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Você não possui permissão para esta operação.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Sem token não pode listar livros",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{base_url}}/books",
+            "description": "A autenticação foi desativada somente nesta requisição. Deve retornar 401."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 401', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "401 Unauthorized - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "url": "{{base_url}}/books",
+                "description": "A autenticação foi desativada somente nesta requisição. Deve retornar 401."
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Token não informado.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Importação recusa ISBN malformado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{base_url}}/books/import",
+            "description": "Confirma a validação antes de consultar a Open Library. Deve retornar 400 e não criar exemplar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isbn\": \"123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"admin_token\"];",
+                  "for (const key of required) {",
+                  "  if (!String(pm.variables.get(key) || '').trim()) {",
+                  "    throw new Error('Preencha a variável ou execute a requisição anterior: ' + key);",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Resposta HTTP 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "400 Bad Request - exemplo ilustrativo",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{base_url}}/books/import",
+                "description": "Confirma a validação antes de consultar a Open Library. Deve retornar 400 e não criar exemplar.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"isbn\": \"123\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"O ISBN deve possuir 10 ou 13 caracteres válidos.\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
