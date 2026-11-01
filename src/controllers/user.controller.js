@@ -1,4 +1,5 @@
 import {
+  deleteUser,
   findAllUsers,
   findUserById,
   updateUser,
@@ -35,6 +36,19 @@ export async function editCurrentUser(request, response, next) {
 
     return response.status(200).json({
       message: "Cadastro atualizado com sucesso.",
+      user,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function removeUser(request, response, next) {
+  try {
+    const user = await deleteUser(request.params.id, request.user.id);
+
+    return response.status(200).json({
+      message: "Usuário excluído com sucesso.",
       user,
     });
   } catch (error) {

@@ -76,3 +76,46 @@ export async function updateUser(id, data = {}) {
 
   return result.rows[0];
 }
+
+export async function deleteUser(id, requesterId) {
+  const userId = Number(id);
+
+  if (!Number.isSafeInteger(userId) || userId <= 0) {
+    throw createError("Identificador de usuário inválido.", 400);
+  }
+
+  if (userId === Number(requesterId)) {
+    throw createError("Você não pode excluir a própria conta por esta rota.", 409);
+  }
+
+  const user = await findUserById(userId);
+
+  if (!user) {
+    throw createError("Usuário não encontrado.", 404);
+  }
+
+  const loanResult = await pool.query(
+    "SELECT id FROM loans WHERE user_id = $1 LIMIT 1",
+    [userId],
+  );
+
+  if (loanResult.rows[0]) {
+    throw createError(
+      "Não é possível excluir um usuário que possui histórico de empréstimos.",
+      409,
+    );
+  }
+
+  const result = await pool.query(
+    `DELETE FROM users
+     WHERE id = $1
+     RETURNING id, name, email, role, created_at`,
+    [userId],
+  );
+
+  if (!result.rows[0]) {
+    throw createError("Usuário não encontrado.", 404);
+  }
+
+  return result.rows[0];
+}
