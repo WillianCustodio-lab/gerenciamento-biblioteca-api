@@ -1,0 +1,62 @@
+name: CI - Qualidade e testes
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint, testes e cobertura
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+
+        env:
+          POSTGRES_DB: biblioteca_test
+          POSTGRES_USER: biblioteca_test
+          POSTGRES_PASSWORD: test-only-password
+
+        ports:
+          - 5434:5432
+
+        options: >-
+          --health-cmd "pg_isready -U biblioteca_test -d biblioteca_test"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 15
+
+    steps:
+      - name: Baixar o código do repositório
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Executar lint
+        run: npm run lint
+
+      - name: Executar testes e gerar cobertura
+        run: npm run test:coverage
+
+      - name: Guardar relatório de cobertura
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: cobertura
+          path: coverage/
+          retention-days: 7
+          if-no-files-found: warn
