@@ -8,4 +8,5 @@
 5f58e89574bafade25e3f12d96cc88128751ffe2:tests/integration/library.test.js:generic-api-key:178
 
 # Senha ilustrativa da documentacao.
-1485edda0b995d34e5aab4658ddb042b0d4e8542:README.md:generic-api-key:369  
+1485edda0b995d34e5aab4658ddb042b0d4e8542:README.md:generic-api-key:369
+d601c982e14e921a4943de2b00d84f9d8e790808:.github/workflows/ci.yml:curl-auth-user:143
