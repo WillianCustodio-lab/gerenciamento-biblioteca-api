@@ -186,3 +186,40 @@ jobs:
         uses: SonarSource/sonarqube-scan-action@v8.3.0
         with:
           args: -Dsonar.qualitygate.wait=true
+  container_security:
+    name: Build e segurança da imagem
+    needs: [secrets, sonarqube]
+    if: >-
+      ${{
+        !cancelled() &&
+        needs.secrets.result == 'success' &&
+        (
+          needs.sonarqube.result == 'success' ||
+          (
+            github.ref == 'refs/heads/infra/qualidade-testes' &&
+            needs.sonarqube.result == 'skipped'
+          )
+        )
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Baixar código do repositório
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Gerar imagem da API
+        run: docker build --tag "biblioteca-api:${GITHUB_SHA}" .
+
+      - name: Verificar vulnerabilidades com Trivy
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: image
+          image-ref: biblioteca-api:${{ github.sha }}
+          scanners: vuln
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+          format: table
+          exit-code: '1'
