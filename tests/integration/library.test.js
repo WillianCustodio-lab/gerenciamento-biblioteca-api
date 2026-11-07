@@ -142,6 +142,7 @@ describe("integração da biblioteca com PostgreSQL", () => {
       database: "connected",
     });
     expect(response.body.databaseTime).toEqual(expect.any(String));
+    expect(response.headers["x-powered-by"]).toBeUndefined();
   });
 
   it("cadastra, protege a senha e permite login e consulta do próprio cadastro", async () => {

@@ -1,4 +1,5 @@
 import { pool } from "../infrastructure/database/connection.js";
+import { isValidEmail } from "../utils/email.js";
 
 function createError(message, statusCode) {
   const error = new Error(message);
@@ -48,7 +49,7 @@ export async function updateUser(id, data = {}) {
     );
   }
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!isValidEmail(email)) {
     throw createError("Informe um e-mail válido.", 400);
   }
 

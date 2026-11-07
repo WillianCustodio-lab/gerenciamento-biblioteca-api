@@ -10,6 +10,7 @@ import {
 } from "./middlewares/error-handler.middleware.js";
 
 const app = express();
+app.disable("x-powered-by");
 
 app.use(express.json());
 app.use("/auth", authRoutes);

@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import { pool } from "../infrastructure/database/connection.js";
+import { isValidEmail } from "../utils/email.js";
 
 function createError(message, statusCode) {
   const error = new Error(message);
@@ -23,7 +24,7 @@ export async function createAdministrator({ name, email, password } = {}) {
     throw createError("O nome deve ter até 120 caracteres e o e-mail até 255.", 400);
   }
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+  if (!isValidEmail(normalizedEmail)) {
     throw createError("Informe um e-mail válido.", 400);
   }
 
