@@ -253,3 +253,22 @@ jobs:
 
           docker tag "biblioteca-api:${GITHUB_SHA}" "${image}:latest"
           docker push "${image}:latest"
+
+  deploy:
+    name: Deploy no Render
+    needs: container_security
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Solicitar deploy da imagem publicada
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+        run: |
+          image="docker.io/${DOCKERHUB_USERNAME}/gerenciamento-biblioteca-api:${GITHUB_SHA}"
+
+          curl --fail-with-body --silent --show-error --max-time 60 \
+            --get "$RENDER_DEPLOY_HOOK_URL" \
+            --data-urlencode "imgURL=$image"
