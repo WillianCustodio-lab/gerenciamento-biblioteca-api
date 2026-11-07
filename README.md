@@ -87,7 +87,7 @@ O endereço padrão da API é `http://localhost:3000`.
 Com a API em execução e as migrations concluídas, abra um terminal interativo na raiz do projeto:
 
 ```bash
-docker compose exec app npm run create-admin
+docker compose exec app node src/scripts/create-admin.js
 ```
 
 O comando solicita nome, e-mail, senha e confirmação. A senha fica oculta durante a digitação, e ao final, ele cria uma conta nova com perfil `admin`
