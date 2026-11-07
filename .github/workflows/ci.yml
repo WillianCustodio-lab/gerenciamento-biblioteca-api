@@ -1,0 +1,274 @@
+name: CI - Qualidade e testes
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint, testes e cobertura
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+
+        env:
+          POSTGRES_DB: biblioteca_test
+          POSTGRES_USER: biblioteca_test
+          POSTGRES_PASSWORD: test-only-password
+
+        ports:
+          - 5434:5432
+
+        options: >-
+          --health-cmd "pg_isready -U biblioteca_test -d biblioteca_test"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 15
+
+    steps:
+      - name: Baixar o código do repositório
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Executar lint
+        run: npm run lint
+
+      - name: Executar testes e gerar cobertura
+        run: npm run test:coverage
+
+      - name: Guardar relatório de cobertura
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: cobertura
+          path: coverage/
+          retention-days: 7
+          if-no-files-found: warn
+
+  secrets:
+    name: Análise de segredos
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Baixar código e histórico completo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verificar segredos com Gitleaks
+        run: |
+          docker run --rm \
+            --network none \
+            --volume "$PWD:/repo:ro" \
+            --workdir /repo \
+            ghcr.io/gitleaks/gitleaks:v8.30.1 \
+            git \
+            --log-opts="--all" \
+            --redact=100 \
+            --verbose \
+            --exit-code=1 \
+            .
+  sonarqube:
+    name: SonarQube e Quality Gate
+    if: github.ref == 'refs/heads/main'
+    needs: [quality, secrets]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      SONAR_HOST_URL: http://127.0.0.1:9000
+
+    steps:
+      - name: Baixar código e histórico
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Recuperar relatório de cobertura
+        uses: actions/download-artifact@v8
+        with:
+          name: cobertura
+          path: coverage/
+
+      - name: Iniciar o SonarQube
+        run: |
+          test -s coverage/lcov.info
+
+          docker run -d --name sonarqube-ci \
+            -p 127.0.0.1:9000:9000 \
+            -e SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true \
+            sonarqube:26.10.0.133078-community
+
+          for attempt in {1..60}; do
+            if curl -fsS --max-time 3 "$SONAR_HOST_URL/api/system/status" 2>/dev/null \
+              | jq -e '.status == "UP"' >/dev/null; then
+              exit 0
+            fi
+            sleep 3
+          done
+
+          docker logs --tail 100 sonarqube-ci
+          exit 1
+
+      - name: Preparar projeto, Quality Gate e token
+        run: |
+          project_key=$(sed -n 's/^sonar\.projectKey=//p' sonar-project.properties | tr -d '\r')
+          test -n "$project_key"
+          gate_name="Biblioteca CI"
+
+          # A senha inicial é usada apenas nesta instância local e descartável.
+          sonar_api() {
+            local endpoint="$1"
+            shift
+            curl --fail-with-body --silent --show-error \
+              --user admin:admin "$SONAR_HOST_URL/api/$endpoint" "$@"
+          }
+
+          sonar_api projects/create \
+            --data-urlencode "project=$project_key" \
+            --data-urlencode "name=$project_key" \
+            --data-urlencode "mainBranch=main" >/dev/null
+
+          sonar_api qualitygates/create \
+            --data-urlencode "name=$gate_name" >/dev/null
+
+          # Um gate recém-criado herda condições do Sonar way.
+          # Substituímos essas condições pelos critérios deste projeto.
+          gate=$(sonar_api qualitygates/show --get \
+            --data-urlencode "name=$gate_name")
+          condition_ids=$(jq -r '.conditions[].id' <<< "$gate")
+          for condition_id in $condition_ids; do
+            sonar_api qualitygates/delete_condition \
+              --data-urlencode "id=$condition_id" >/dev/null
+          done
+
+          for quality in security reliability maintainability; do
+            sonar_api qualitygates/create_condition \
+              --data-urlencode "gateName=$gate_name" \
+              --data-urlencode "metric=software_quality_${quality}_rating" \
+              --data-urlencode "op=GT" \
+              --data-urlencode "error=1" >/dev/null
+          done
+
+          sonar_api qualitygates/select \
+            --data-urlencode "gateName=$gate_name" \
+            --data-urlencode "projectKey=$project_key" >/dev/null
+
+          token_response=$(sonar_api user_tokens/generate \
+            --data-urlencode "name=ci-analysis" \
+            --data-urlencode "type=PROJECT_ANALYSIS_TOKEN" \
+            --data-urlencode "projectKey=$project_key")
+          token=$(jq -er '.token | select(length > 0)' <<< "$token_response")
+          echo "::add-mask::$token"
+          echo "SONAR_TOKEN=$token" >> "$GITHUB_ENV"
+
+      - name: Analisar código e aguardar o Quality Gate
+        uses: SonarSource/sonarqube-scan-action@v8.3.0
+        with:
+          args: -Dsonar.qualitygate.wait=true
+  container_security:
+    name: Build e segurança da imagem
+    needs: [secrets, sonarqube]
+    if: >-
+      ${{
+        !cancelled() &&
+        needs.secrets.result == 'success' &&
+        (
+          needs.sonarqube.result == 'success' ||
+          (
+            github.ref == 'refs/heads/infra/qualidade-testes' &&
+            needs.sonarqube.result == 'skipped'
+          )
+        )
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Baixar código do repositório
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Gerar imagem da API
+        run: docker build --tag "biblioteca-api:${GITHUB_SHA}" .
+
+      - name: Verificar vulnerabilidades com Trivy
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: image
+          image-ref: biblioteca-api:${{ github.sha }}
+          scanners: vuln
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+          format: table
+          exit-code: '1'
+      - name: Autenticar no Docker Hub
+        if: >-
+          github.ref == 'refs/heads/main' ||
+          github.ref == 'refs/heads/infra/qualidade-testes'
+        uses: docker/login-action@v4.6.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Publicar a imagem identificada pelo commit
+        if: >-
+          github.ref == 'refs/heads/main' ||
+          github.ref == 'refs/heads/infra/qualidade-testes'
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+        run: |
+          image="${DOCKERHUB_USERNAME}/gerenciamento-biblioteca-api"
+
+          docker tag "biblioteca-api:${GITHUB_SHA}" "${image}:${GITHUB_SHA}"
+          docker push "${image}:${GITHUB_SHA}"
+
+      - name: Atualizar a imagem latest
+        if: github.ref == 'refs/heads/main'
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+        run: |
+          image="${DOCKERHUB_USERNAME}/gerenciamento-biblioteca-api"
+
+          docker tag "biblioteca-api:${GITHUB_SHA}" "${image}:latest"
+          docker push "${image}:latest"
+
+  deploy:
+    name: Deploy no Render
+    needs: container_security
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Solicitar deploy da imagem publicada
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+        run: |
+          image="docker.io/${DOCKERHUB_USERNAME}/gerenciamento-biblioteca-api:${GITHUB_SHA}"
+
+          curl --fail-with-body --silent --show-error --max-time 60 \
+            --get "$RENDER_DEPLOY_HOOK_URL" \
+            --data-urlencode "imgURL=$image"
