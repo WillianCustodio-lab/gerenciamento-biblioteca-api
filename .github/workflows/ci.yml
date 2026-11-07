@@ -223,3 +223,33 @@ jobs:
           severity: HIGH,CRITICAL
           format: table
           exit-code: '1'
+      - name: Autenticar no Docker Hub
+        if: >-
+          github.ref == 'refs/heads/main' ||
+          github.ref == 'refs/heads/infra/qualidade-testes'
+        uses: docker/login-action@v4.6.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Publicar a imagem identificada pelo commit
+        if: >-
+          github.ref == 'refs/heads/main' ||
+          github.ref == 'refs/heads/infra/qualidade-testes'
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+        run: |
+          image="${DOCKERHUB_USERNAME}/gerenciamento-biblioteca-api"
+
+          docker tag "biblioteca-api:${GITHUB_SHA}" "${image}:${GITHUB_SHA}"
+          docker push "${image}:${GITHUB_SHA}"
+
+      - name: Atualizar a imagem latest
+        if: github.ref == 'refs/heads/main'
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+        run: |
+          image="${DOCKERHUB_USERNAME}/gerenciamento-biblioteca-api"
+
+          docker tag "biblioteca-api:${GITHUB_SHA}" "${image}:latest"
+          docker push "${image}:latest"
