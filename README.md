@@ -172,14 +172,10 @@ Os campos de recuperação podem ficar nulos. `returned_at` permanece nulo até 
 
 ### Acesso por perfil
 
-| Operação | Usuário comum | Administrador |
-| --- | --- | --- |
-| Consultar livros | Permitido | Permitido |
-| Cadastrar, importar, atualizar e excluir livros | Não permitido | Permitido |
-| Consultar e atualizar o próprio cadastro | Permitido | Permitido |
-| Listar e excluir outros usuários | Não permitido | Permitido, respeitando o histórico |
-| Consultar empréstimos | Somente os próprios | Todos |
-| Registrar empréstimo e devolução | Não permitido | Permitido |
+- **Usuário comum (`user`):** consulta livros, consulta e atualiza o próprio cadastro e acompanha somente os próprios empréstimos.
+- **Administrador (`admin`):** além das permissões comuns, cadastra, importa, atualiza e exclui livros, consulta todos os empréstimos, registra retiradas e devoluções e lista ou exclui usuários.
+
+A exclusão de livros e usuários exige ausência de histórico de empréstimos. O administrador não pode excluir a própria conta.
 
 ## Integração com a Open Library
 
