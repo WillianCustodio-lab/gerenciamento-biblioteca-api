@@ -12,7 +12,7 @@ export async function runCreateAdmin({
 } = {}) {
   if (!input.isTTY || !output.isTTY) {
     const error = new Error(
-      "Execute em um terminal interativo: docker compose exec app npm run create-admin (sem -T).",
+      "Execute em um terminal interativo: docker compose exec app node src/scripts/create-admin.js (sem -T).",
     );
     error.statusCode = 400;
     throw error;
